@@ -2,6 +2,8 @@ import express from "express"
 import cors from "cors"
 import mongoose from "mongoose"
 import dotenv from "dotenv"
+import accountRoutes from "./routes/accountRoutes"
+import transactionRoutes from "./routes/transactionRoutes"
 
 dotenv.config()
 
@@ -26,6 +28,9 @@ app.get("/api/test", (req, res) => {
   console.log("Received request on test route")
   res.json({ message: "API is working correctly" })
 })
+
+app.use("/api/accounts", accountRoutes)
+app.use("/api/transactions", transactionRoutes)
 
 console.log("Attempting to connect to MongoDB...")
 mongoose
