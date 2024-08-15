@@ -84,7 +84,7 @@ This diagram illustrates the relationships between the main entities in our syst
 
 1. Clone the repository:
    ```
-   git clone https://github.com/andylopezr/softblue-bank.git
+   git clone https://github.com/andylopezr/bluesoft
    cd softblue-bank
    ```
 
