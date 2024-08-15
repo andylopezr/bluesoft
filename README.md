@@ -114,16 +114,20 @@ This diagram illustrates the relationships between the main entities in our syst
 softblue-bank/
 ├── backend/
 │   ├── src/
-│   │   ├── models/
-│   │   ├── services/
 │   │   ├── controllers/
+│   │   ├── kafka/
+│   │   ├── models/
 │   │   └── routes/
+│   │   ├── services/
 │   ├── tests/
 │   └── package.json
 ├── frontend/
-│   ├── pages/
-│   ├── components/
-│   ├── styles/
+│   ├── src/
+│   |   ├── app/
+│   |   ├── components/
+│   |   ├── store/
+│   |   ├── services/
+│   |   ├── styles/
 │   └── package.json
 ├── docker-compose.yml
 └── README.md
