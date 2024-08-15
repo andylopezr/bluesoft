@@ -1,6 +1,6 @@
-# SoftBlue Bank
+# Bluesoft Bank
 
-SoftBlue Bank is a modern, scalable banking system built with Node.js, Express, MongoDB, and Next.js. It provides robust account management, real-time transaction processing, and comprehensive reporting features.
+Bluesoft Bank is a modern, scalable banking system built with Node.js, Express, MongoDB, and Next.js. It provides robust account management, real-time transaction processing, and comprehensive reporting features.
 
 ## Features
 
@@ -13,7 +13,7 @@ SoftBlue Bank is a modern, scalable banking system built with Node.js, Express, 
 
 ## System Architecture
 
-Below is a class diagram representing the core entities in the SoftBlue Bank system:
+Below is a class diagram representing the core entities in the Bluesoft Bank system:
 
 ```mermaid
 classDiagram
@@ -85,7 +85,7 @@ This diagram illustrates the relationships between the main entities in our syst
 1. Clone the repository:
    ```
    git clone https://github.com/andylopezr/bluesoft
-   cd softblue-bank
+   cd bluesoft-bank
    ```
 
 2. Install dependencies:
@@ -111,7 +111,7 @@ This diagram illustrates the relationships between the main entities in our syst
 ## Project Structure
 
 ```
-softblue-bank/
+bluesoft-bank/
 ├── backend/
 │   ├── src/
 │   │   ├── controllers/
