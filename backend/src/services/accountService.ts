@@ -1,64 +1,50 @@
+import mongoose, { Types } from "mongoose"
 import Account, { IAccount } from "../models/Account"
-import SavingsAccount, { ISavingsAccount } from "../models/SavingsAccount"
-import CheckingAccount, { ICheckingAccount } from "../models/CheckingAccount"
-import Customer, { ICustomer } from "../models/Customer"
-import mongoose, { ClientSession, Document } from "mongoose"
+import Customer from "../models/Customer"
+import Transaction, { ITransaction } from "../models/Transaction"
 
-type AccountDocument = Document<mongoose.Types.ObjectId, {}, IAccount> & IAccount
+interface IAccountDocument extends IAccount, Document {
+  _id: Types.ObjectId
+}
 
 export const createAccount = async (
   customerId: string,
   accountType: "savings" | "checking",
   initialBalance: number,
   originCity: string
-): Promise<IAccount> => {
-  const session: ClientSession = await mongoose.startSession()
-  session.startTransaction()
-
-  try {
-    const customer = await Customer.findById(customerId).session(session)
-    if (!customer) {
-      throw new Error("Customer not found")
-    }
-
-    const accountNumber = Math.floor(100000 + Math.random() * 900000).toString()
-    let account: AccountDocument
-
-    const baseAccountData = {
-      accountNumber,
-      balance: initialBalance,
-      originCity,
-      customerId: new mongoose.Types.ObjectId(customerId),
-    }
-
-    if (accountType === "savings") {
-      account = new SavingsAccount({
-        ...baseAccountData,
-        interestRate: 0.01,
-      }) as AccountDocument
-    } else {
-      account = new CheckingAccount({
-        ...baseAccountData,
-        overdraftLimit: 100,
-      }) as AccountDocument
-    }
-
-    await account.save({ session })
-
-    if (!account._id) {
-      throw new Error("Failed to generate account ID")
-    }
-
-    customer.accounts.push(account._id)
-
-    await session.commitTransaction()
-    return account
-  } catch (error) {
-    await session.abortTransaction()
-    throw error
-  } finally {
-    session.endSession()
+): Promise<IAccountDocument> => {
+  const customer = await Customer.findById(customerId)
+  if (!customer) {
+    throw new Error("Customer not found")
   }
+
+  if (customer.customerType === "persona_natural" && accountType !== "savings") {
+    throw new Error("Persona natural can only open savings accounts")
+  }
+  if (customer.customerType === "empresa" && accountType !== "checking") {
+    throw new Error("Empresa can only open checking accounts")
+  }
+
+  const accountNumber = Math.floor(100000 + Math.random() * 900000).toString()
+
+  const account = new Account({
+    accountNumber,
+    balance: initialBalance,
+    originCity,
+    customerId: new Types.ObjectId(customerId),
+    accountType,
+  })
+
+  const savedAccount = (await account.save()) as IAccountDocument
+
+  customer.accounts.push(savedAccount._id)
+  await customer.save()
+
+  if (initialBalance > 0) {
+    await createTransaction(savedAccount._id, initialBalance, "deposit", originCity)
+  }
+
+  return savedAccount
 }
 
 export const getAccountBalance = async (accountId: string): Promise<number> => {
@@ -69,13 +55,43 @@ export const getAccountBalance = async (accountId: string): Promise<number> => {
   return account.balance
 }
 
-export const getRecentTransactions = async (accountId: string, limit: number = 10) => {
+export const createTransaction = async (
+  accountId: Types.ObjectId,
+  amount: number,
+  type: "deposit" | "withdrawal",
+  transactionCity: string
+): Promise<ITransaction> => {
   const account = await Account.findById(accountId)
   if (!account) {
     throw new Error("Account not found")
   }
-  // Implement logic to fetch recent transactions
-  // This will be implemented when we create the Transaction model and service
+
+  if (type === "withdrawal" && account.balance < amount) {
+    throw new Error("Insufficient funds")
+  }
+
+  const newBalance = type === "deposit" ? account.balance + amount : account.balance - amount
+
+  const transaction = new Transaction({
+    accountId,
+    amount,
+    type,
+    transactionCity,
+  })
+
+  await transaction.save()
+  account.balance = newBalance
+  await account.save()
+
+  return transaction
+}
+
+export const getRecentTransactions = async (
+  accountId: string,
+  limit: number = 10
+): Promise<ITransaction[]> => {
+  const transactions = await Transaction.find({ accountId }).sort({ createdAt: -1 }).limit(limit)
+  return transactions
 }
 
 export const generateMonthlyStatement = async (accountId: string, month: number, year: number) => {
@@ -83,6 +99,46 @@ export const generateMonthlyStatement = async (accountId: string, month: number,
   if (!account) {
     throw new Error("Account not found")
   }
-  // Implement logic to generate monthly statement
-  // This will involve fetching transactions for the specified month and year
+
+  const startDate = new Date(year, month - 1, 1)
+  const endDate = new Date(year, month, 0)
+
+  const transactions = await Transaction.find({
+    accountId,
+    createdAt: { $gte: startDate, $lte: endDate },
+  }).sort({ createdAt: 1 })
+
+  const openingBalance = await calculateOpeningBalance(accountId, startDate)
+  const closingBalance = account.balance
+
+  return {
+    accountNumber: account.accountNumber,
+    month,
+    year,
+    openingBalance,
+    closingBalance,
+    transactions,
+  }
+}
+
+const calculateOpeningBalance = async (accountId: string, date: Date): Promise<number> => {
+  const account = await Account.findById(accountId)
+  if (!account) {
+    throw new Error("Account not found")
+  }
+
+  const transactionsBeforeDate = await Transaction.find({
+    accountId,
+    createdAt: { $lt: date },
+  })
+
+  const totalDeposits = transactionsBeforeDate
+    .filter((t) => t.type === "deposit")
+    .reduce((sum, t) => sum + t.amount, 0)
+
+  const totalWithdrawals = transactionsBeforeDate
+    .filter((t) => t.type === "withdrawal")
+    .reduce((sum, t) => sum + t.amount, 0)
+
+  return totalDeposits - totalWithdrawals
 }

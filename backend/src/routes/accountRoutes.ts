@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express"
+import { Types } from "mongoose"
 import * as accountService from "../services/accountService"
-import * as transactionService from "../services/transactionService"
 
 const router = express.Router()
 
@@ -23,9 +23,20 @@ router.get("/:id/balance", async (req: Request, res: Response) => {
   }
 })
 
+router.post("/:id/transactions", async (req: Request, res: Response) => {
+  try {
+    const { amount, type, transactionCity } = req.body
+    const accountId = new Types.ObjectId(req.params.id)
+    const transaction = await accountService.createTransaction(accountId, amount, type, transactionCity)
+    res.status(201).json(transaction)
+  } catch (error) {
+    handleError(res, error)
+  }
+})
+
 router.get("/:id/transactions", async (req: Request, res: Response) => {
   try {
-    const transactions = await transactionService.getTransactionsByAccount(req.params.id)
+    const transactions = await accountService.getRecentTransactions(req.params.id)
     res.json(transactions)
   } catch (error) {
     handleError(res, error)

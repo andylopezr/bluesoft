@@ -36,6 +36,7 @@ classDiagram
     class Customer {
         +String id
         +String name
+        +CustomerType customerType
         +Array accounts
     }
     class Transaction {
@@ -49,6 +50,22 @@ classDiagram
         +generateMonthlyTransactionsReport()
         +generateExternalWithdrawalsReport()
     }
+    class Backend {
+        +app.ts
+        +controllers/
+        +kafka/
+        +models/
+        +routes/
+        +server.ts
+        +services/
+    }
+    class Frontend {
+        +app/
+        +components/
+        +store/
+        +services/
+        +styles/
+    }
     
     Account <|-- SavingsAccount
     Account <|-- CheckingAccount
@@ -56,6 +73,18 @@ classDiagram
     Account "1" -- "*" Transaction
     Report -- Customer
     Report -- Transaction
+    Backend -- Account
+    Backend -- SavingsAccount
+    Backend -- CheckingAccount
+    Backend -- Customer
+    Backend -- Transaction
+    Backend -- Report
+    Frontend -- Account
+    Frontend -- SavingsAccount
+    Frontend -- CheckingAccount
+    Frontend -- Customer
+    Frontend -- Transaction
+    Frontend -- Report
 ```
 
 This diagram illustrates the relationships between the main entities in our system, including Account types, Customers, Transactions, and Reports.

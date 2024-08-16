@@ -2,8 +2,10 @@ import express from "express"
 import cors from "cors"
 import mongoose from "mongoose"
 import dotenv from "dotenv"
+import customerRoutes from "./routes/customerRoutes"
 import accountRoutes from "./routes/accountRoutes"
 import transactionRoutes from "./routes/transactionRoutes"
+import { authMiddleware } from "./middleware/authMiddleware"
 
 dotenv.config()
 
@@ -21,7 +23,7 @@ const PORT = process.env.PORT || 5000
 
 app.get("/", (req, res) => {
   console.log("Received request on root route")
-  res.json({ message: "Welcome to SoftBlue Bank API" })
+  res.json({ message: "Welcome to Bluesoft Bank API" })
 })
 
 app.get("/api/test", (req, res) => {
@@ -29,8 +31,9 @@ app.get("/api/test", (req, res) => {
   res.json({ message: "API is working correctly" })
 })
 
-app.use("/api/accounts", accountRoutes)
-app.use("/api/transactions", transactionRoutes)
+app.use("/api/customers", customerRoutes)
+app.use("/api/accounts", authMiddleware, accountRoutes)
+app.use("/api/transactions", authMiddleware, transactionRoutes)
 
 console.log("Attempting to connect to MongoDB...")
 mongoose
