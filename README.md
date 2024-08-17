@@ -26,22 +26,25 @@ classDiagram
         +generateMonthlyStatement()
     }
     class SavingsAccount {
+        +Number interestRate
         +deposit(amount)
         +withdraw(amount)
     }
     class CheckingAccount {
+        +Number overdraftLimit
         +deposit(amount)
         +withdraw(amount)
     }
     class Customer {
-        +String id
         +String name
-        +CustomerType customerType
+        +String email
+        +String customerType
+        +String password
         +Array accounts
+        +comparePassword(candidatePassword)
     }
     class Transaction {
-        +String id
-        +Date date
+        +String accountId
         +Number amount
         +String type
         +String transactionCity
@@ -50,22 +53,6 @@ classDiagram
         +generateMonthlyTransactionsReport()
         +generateExternalWithdrawalsReport()
     }
-    class Backend {
-        +app.ts
-        +controllers/
-        +kafka/
-        +models/
-        +routes/
-        +server.ts
-        +services/
-    }
-    class Frontend {
-        +app/
-        +components/
-        +store/
-        +services/
-        +styles/
-    }
     
     Account <|-- SavingsAccount
     Account <|-- CheckingAccount
@@ -73,21 +60,7 @@ classDiagram
     Account "1" -- "*" Transaction
     Report -- Customer
     Report -- Transaction
-    Backend -- Account
-    Backend -- SavingsAccount
-    Backend -- CheckingAccount
-    Backend -- Customer
-    Backend -- Transaction
-    Backend -- Report
-    Frontend -- Account
-    Frontend -- SavingsAccount
-    Frontend -- CheckingAccount
-    Frontend -- Customer
-    Frontend -- Transaction
-    Frontend -- Report
 ```
-
-This diagram illustrates the relationships between the main entities in our system, including Account types, Customers, Transactions, and Reports.
 
 ## Tech Stack
 
@@ -142,25 +115,90 @@ This diagram illustrates the relationships between the main entities in our syst
 ```
 bluesoft-bank/
 ├── backend/
+│   ├── node_modules/
 │   ├── src/
-│   │   ├── controllers/
-│   │   ├── kafka/
+│   │   ├── middleware/
+│   │   │   └── authMiddleware.ts
 │   │   ├── models/
-│   │   └── routes/
+│   │   │   ├── Account.ts
+│   │   │   ├── CheckingAccount.ts
+│   │   │   ├── Customer.ts
+│   │   │   ├── SavingsAccount.ts
+│   │   │   └── Transaction.ts
+│   │   ├── routes/
+│   │   │   ├── accountRoutes.ts
+│   │   │   ├── customerRoutes.ts
+│   │   │   ├── reportingRoutes.ts
+│   │   │   └── transactionRoutes.ts
 │   │   ├── services/
-│   ├── tests/
-│   └── package.json
+│   │   │   ├── accountService.ts
+│   │   │   ├── transactionService.ts
+│   │   │   ├── app.ts
+│   │   │   └── server.ts
+│   ├── .env
+│   ├── package-lock.json
+│   ├── package.json
+│   └── tsconfig.json
 ├── frontend/
+│   ├── node_modules/
+│   ├── public/
+│   │   ├── hero.png
+│   │   ├── next.svg
+│   │   └── vercel.svg
 │   ├── src/
-│   |   ├── app/
-│   |   ├── components/
-│   |   ├── store/
-│   |   ├── services/
-│   |   ├── styles/
+│   │   ├── app/
+│   │   │   ├── customers/
+│   │   │   │   └── page.tsx
+│   │   │   ├── dashboard/
+│   │   │   │   ├── reports/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── favicon.ico
+│   │   │   ├── globals.css
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx
+│   │   ├── components/
+│   │   │   ├── AccountCreationModal.tsx
+│   │   │   ├── AccountList.tsx
+│   │   │   ├── CreateAccountButton.tsx
+│   │   │   ├── CustomerForm.tsx
+│   │   │   ├── CustomerList.tsx
+│   │   │   ├── Layout.tsx
+│   │   │   ├── LoginModal.tsx
+│   │   │   ├── LogoutButton.tsx
+│   │   │   ├── Navbar.tsx
+│   │   │   ├── ReportGeneration.tsx
+│   │   │   ├── ReportView.tsx
+│   │   │   └── Transaction.tsx
+│   │   └── utils/
+│   │       └── formatCurrency.ts
+│   ├── .env
+│   ├── package-lock.json
 │   └── package.json
 ├── docker-compose.yml
 └── README.md
 ```
+
+## Models
+
+### Account
+- Base model for all account types
+- Fields: accountNumber, balance, originCity, customerId, accountType
+
+### CheckingAccount
+- Extends Account
+- Additional field: overdraftLimit
+
+### SavingsAccount
+- Extends Account
+- Additional field: interestRate
+
+### Customer
+- Fields: name, email, customerType, password, accounts
+- Methods: comparePassword
+
+### Transaction
+- Fields: accountId, amount, type, transactionCity
 
 ## API Documentation
 
