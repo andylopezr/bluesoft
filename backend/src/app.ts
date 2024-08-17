@@ -5,6 +5,7 @@ import dotenv from "dotenv"
 import customerRoutes from "./routes/customerRoutes"
 import accountRoutes from "./routes/accountRoutes"
 import transactionRoutes from "./routes/transactionRoutes"
+import reportingRoutes from "./routes/reportingRoutes"
 import { authMiddleware } from "./middleware/authMiddleware"
 
 dotenv.config()
@@ -40,6 +41,7 @@ app.get("/api/test", (req, res) => {
 })
 
 app.use("/api/customers", customerRoutes)
+app.use("/api/reporting", reportingRoutes)
 app.use("/api/accounts", authMiddleware, accountRoutes)
 app.use("/api/transactions", authMiddleware, transactionRoutes)
 

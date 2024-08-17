@@ -56,7 +56,7 @@ const ReportGeneration: React.FC<ReportGenerationProps> = ({ accountId, onReport
   }
 
   return (
-    <div className='bg-white p-6 rounded-lg shadow-lg max-w-md w-full'>
+    <div className='bg-white p-6 rounded-lg shadow-lg max-w-md w-full mt-4'>
       <h2 className='text-2xl font-bold mb-4 text-black'>Generate Report</h2>
       <form
         className='space-y-4'

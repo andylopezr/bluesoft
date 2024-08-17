@@ -11,7 +11,7 @@ const AccountCreationModal: React.FC<ModalProps> = ({ show, message, onClose }) 
 
   return (
     <div className='fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center'>
-      <div className='bg-white p-4 rounded-lg shadow-lg justify-center items-center'>
+      <div className='flex flex-col bg-white p-4 rounded-lg shadow-lg justify-center items-center'>
         <p className='text-black'>{message}</p>
         <button
           onClick={onClose}

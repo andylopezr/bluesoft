@@ -213,7 +213,7 @@ export default function Dashboard() {
           </div>
         )}
         {showReportGeneration && (
-          <div className='space-y-4 flex items-center justify-start space-x-4'>
+          <div className='space-y-4 flex items-start justify-start space-x-4'>
             <ReportGeneration accountId={accounts[0]._id} onReportGenerated={handleReportGeneration} />
             {report && <ReportView report={report} />}
           </div>
