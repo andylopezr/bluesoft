@@ -1,7 +1,7 @@
 import { Kafka } from "kafkajs"
 
 const kafka = new Kafka({
-  clientId: "softblue-bank",
+  clientId: "bluesoft-bank",
   brokers: ["localhost:9092"],
 })
 

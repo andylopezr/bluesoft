@@ -1,10 +1,24 @@
 import mongoose, { Types } from "mongoose"
 import Account, { IAccount } from "../models/Account"
-import Customer from "../models/Customer"
+import Customer, { ICustomer } from "../models/Customer"
 import Transaction, { ITransaction } from "../models/Transaction"
+import { sendMessage } from "../kafka/producer"
 
 interface IAccountDocument extends IAccount, Document {
   _id: Types.ObjectId
+}
+
+interface ICustomerDocument extends Omit<ICustomer, "accounts">, Document {
+  _id: Types.ObjectId
+  accounts: Types.ObjectId[]
+}
+
+export const getAccountsByCustomerId = async (customerId: string): Promise<IAccountDocument[]> => {
+  const accounts = await Account.find({ customerId: new Types.ObjectId(customerId) }).lean()
+  if (!accounts || accounts.length === 0) {
+    throw new Error("No accounts found for this customer")
+  }
+  return accounts as IAccountDocument[]
 }
 
 export const createAccount = async (
@@ -13,7 +27,7 @@ export const createAccount = async (
   initialBalance: number,
   originCity: string
 ): Promise<IAccountDocument> => {
-  const customer = await Customer.findById(customerId)
+  const customer = (await Customer.findById(customerId)) as ICustomerDocument | null
   if (!customer) {
     throw new Error("Customer not found")
   }
@@ -41,7 +55,7 @@ export const createAccount = async (
   await customer.save()
 
   if (initialBalance > 0) {
-    await createTransaction(savedAccount._id, initialBalance, "deposit", originCity)
+    await createTransaction(savedAccount._id.toString(), initialBalance, "deposit", originCity)
   }
 
   return savedAccount
@@ -56,42 +70,82 @@ export const getAccountBalance = async (accountId: string): Promise<number> => {
 }
 
 export const createTransaction = async (
-  accountId: Types.ObjectId,
+  accountId: string,
   amount: number,
   type: "deposit" | "withdrawal",
   transactionCity: string
 ): Promise<ITransaction> => {
-  const account = await Account.findById(accountId)
-  if (!account) {
-    throw new Error("Account not found")
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    const account = await Account.findById(accountId).session(session)
+    if (!account) {
+      throw new Error("Account not found")
+    }
+
+    if (type === "withdrawal" && account.balance < amount) {
+      throw new Error("Insufficient funds")
+    }
+
+    const newBalance = type === "deposit" ? account.balance + amount : account.balance - amount
+
+    await Account.findByIdAndUpdate(accountId, { balance: newBalance }, { session })
+
+    const transaction = new Transaction({
+      accountId,
+      amount,
+      type,
+      transactionCity,
+    })
+
+    const savedTransaction = await transaction.save({ session })
+
+    await session.commitTransaction()
+
+    await sendMessage("transactions", {
+      accountId,
+      amount,
+      type,
+      transactionCity,
+      timestamp: new Date(),
+    })
+
+    return savedTransaction
+  } catch (error) {
+    await session.abortTransaction()
+    throw error
+  } finally {
+    session.endSession()
   }
-
-  if (type === "withdrawal" && account.balance < amount) {
-    throw new Error("Insufficient funds")
-  }
-
-  const newBalance = type === "deposit" ? account.balance + amount : account.balance - amount
-
-  const transaction = new Transaction({
-    accountId,
-    amount,
-    type,
-    transactionCity,
-  })
-
-  await transaction.save()
-  account.balance = newBalance
-  await account.save()
-
-  return transaction
 }
 
-export const getRecentTransactions = async (
+export const getTransactionsByAccount = async (
   accountId: string,
   limit: number = 10
 ): Promise<ITransaction[]> => {
-  const transactions = await Transaction.find({ accountId }).sort({ createdAt: -1 }).limit(limit)
-  return transactions
+  return Transaction.find({ accountId }).sort({ createdAt: -1 }).limit(limit)
+}
+
+export const getAllTransactions = async (accountId: string): Promise<ITransaction[]> => {
+  return Transaction.find({ accountId }).sort({ createdAt: -1 })
+}
+
+export const getMonthlyTransactions = async (
+  accountId: string,
+  month: number,
+  year: number
+): Promise<ITransaction[]> => {
+  const startDate = new Date(year, month - 1, 1)
+  const endDate = new Date(year, month, 0)
+
+  return Transaction.find({
+    accountId,
+    createdAt: {
+      $gte: startDate,
+      $lte: endDate,
+    },
+  }).sort({ createdAt: -1 })
 }
 
 export const generateMonthlyStatement = async (accountId: string, month: number, year: number) => {
@@ -103,10 +157,7 @@ export const generateMonthlyStatement = async (accountId: string, month: number,
   const startDate = new Date(year, month - 1, 1)
   const endDate = new Date(year, month, 0)
 
-  const transactions = await Transaction.find({
-    accountId,
-    createdAt: { $gte: startDate, $lte: endDate },
-  }).sort({ createdAt: 1 })
+  const transactions = await getMonthlyTransactions(accountId, month, year)
 
   const openingBalance = await calculateOpeningBalance(accountId, startDate)
   const closingBalance = account.balance

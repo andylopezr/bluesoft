@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Layout from "@/components/Layout"
 import CreateAccountButton from "@/components/CreateAccountButton"
+import ReportGeneration from "@/components/ReportGeneration"
+import Transaction from "@/components/Transaction"
 import { jwtDecode } from "jwt-decode"
 
 interface CustomJwtPayload {
@@ -33,6 +35,7 @@ export default function Dashboard() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const [loading, setLoading] = useState(true)
   const [customerType, setCustomerType] = useState("")
+  const [showReportGeneration, setShowReportGeneration] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem("token")
@@ -75,6 +78,10 @@ export default function Dashboard() {
     return "****" + accountNumber.slice(-4)
   }
 
+  const toggleReportGeneration = () => {
+    setShowReportGeneration(!showReportGeneration)
+  }
+
   if (loading) {
     return (
       <Layout>
@@ -109,6 +116,14 @@ export default function Dashboard() {
                   </p>
                   <p className='text-2xl font-bold text-yellow-500'>${account.balance.toFixed(2)}</p>
                 </div>
+                <Transaction accountId={account._id} onTransactionComplete={fetchAccounts} />
+                <button
+                  onClick={toggleReportGeneration}
+                  className='mt-4 w-full text-black flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-bold bg-yellow-400 hover:bg-yellow-300 focus:ring-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2'
+                >
+                  {showReportGeneration ? "Hide Report Generation" : "Generate Report"}
+                </button>
+                {showReportGeneration && <ReportGeneration />}
                 <h2 className='text-lg font-semibold text-gray-700 mt-6 mb-4'>Recent Transactions</h2>
                 {account.recentTransactions && account.recentTransactions.length > 0 ? (
                   <ul className='space-y-3'>
