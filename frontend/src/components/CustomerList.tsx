@@ -47,27 +47,28 @@ const CustomerList: React.FC = () => {
   return (
     <div className='mt-8'>
       <div className='flex justify-between items-center mb-4'>
-        <h2 className='text-2xl font-bold'>Customer List</h2>
+        <h2 className='text-3xl font-extrabold text-white'>Customer List</h2>
         <button
           onClick={handleRefresh}
-          className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300'
+          className='bg-yellow-400 text-black font-bold px-4 py-2 rounded-md shadow-sm hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:bg-yellow-300'
           disabled={isLoading}
         >
           {isLoading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
       {isLoading ? (
-        <p>Loading customers...</p>
+        <p className='text-white'>Loading customers...</p>
       ) : (
-        <ul className='space-y-4'>
+        <div className='bg-white p-4 rounded-md shadow-sm'>
           {customers.map((customer) => (
-            <li key={customer._id} className='border p-4 rounded'>
-              <h3 className='font-bold'>{customer.name}</h3>
-              <p>Email: {customer.email}</p>
-              <p>Type: {customer.customerType}</p>
-            </li>
+            <div key={customer._id} className='py-2'>
+              <h3 className='font-bold text-gray-800'>{customer.name}</h3>
+              <p className='text-gray-600'>Email: {customer.email}</p>
+              <p className='text-gray-600'>Type: {customer.customerType}</p>
+              <hr className='my-2 border-gray-300' />
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   )
