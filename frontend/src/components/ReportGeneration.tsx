@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react"
 
 interface ReportGenerationProps {
   accountId: string
+  onReportGenerated: (data: any) => void
 }
 
-const ReportGeneration: React.FC<ReportGenerationProps> = ({ accountId }) => {
+const ReportGeneration: React.FC<ReportGenerationProps> = ({ accountId, onReportGenerated }) => {
   const [selectedYear, setSelectedYear] = useState("")
   const [selectedMonth, setSelectedMonth] = useState("")
   const [isButtonDisabled, setIsButtonDisabled] = useState(true)
@@ -45,8 +46,7 @@ const ReportGeneration: React.FC<ReportGenerationProps> = ({ accountId }) => {
       )
       if (response.ok) {
         const statement = await response.json()
-        console.log("Generated statement:", statement)
-        // Handle the statement data (e.g., display it or download as PDF)
+        onReportGenerated(statement)
       } else {
         throw new Error("Failed to generate report")
       }

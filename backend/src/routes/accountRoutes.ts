@@ -33,6 +33,16 @@ router.post("/", async (req: AuthRequest, res: Response) => {
   }
 })
 
+router.delete("/:id", async (req: AuthRequest, res: Response) => {
+  try {
+    const accountId = req.params.id
+    await accountService.deleteAccount(accountId)
+    res.status(204).end()
+  } catch (error) {
+    handleError(res, error)
+  }
+})
+
 router.get("/:id/balance", async (req: AuthRequest, res: Response) => {
   try {
     const balance = await accountService.getAccountBalance(req.params.id)

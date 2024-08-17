@@ -60,6 +60,20 @@ export const createAccount = async (
   }
 }
 
+export const deleteAccount = async (accountId: string): Promise<void> => {
+  try {
+    const account = await Account.findById(accountId)
+    if (!account) {
+      throw new Error("Account not found")
+    }
+    await Transaction.deleteMany({ accountId })
+    await account.deleteOne({ _id: accountId })
+  } catch (error) {
+    console.error("Error in deleteAccount:", error)
+    throw error
+  }
+}
+
 export const getAccountBalance = async (accountId: string): Promise<number> => {
   const account = await Account.findById(accountId)
   if (!account) {

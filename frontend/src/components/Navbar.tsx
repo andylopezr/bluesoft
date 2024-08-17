@@ -46,16 +46,20 @@ const Navbar: React.FC = () => {
             Bluesoft Bank
           </Link>
           <ul className='flex items-center space-x-6'>
-            <li>
-              <Link href='/customers' className='text-white hover:text-gray-300'>
-                Create User
-              </Link>
-            </li>
-            <li>
-              <Link href='/transactions' className='text-white hover:text-gray-300'>
-                Transactions
-              </Link>
-            </li>
+            {!userEmail && (
+              <>
+                <li>
+                  <Link href='/customers' className='text-white hover:text-gray-300'>
+                    Create User
+                  </Link>
+                </li>
+                <li>
+                  <Link href='/reports' className='text-white hover:text-gray-300'>
+                    Reports
+                  </Link>
+                </li>
+              </>
+            )}
             <li>
               {userEmail ? (
                 <LogoutButton email={userEmail} onLogout={handleLogout} />

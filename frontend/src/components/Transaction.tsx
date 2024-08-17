@@ -1,3 +1,4 @@
+import { formatCurrency } from "@/utils/formatCurrency"
 import React, { useState, useEffect } from "react"
 
 interface TransactionProps {
@@ -10,14 +11,15 @@ type TransactionType = "deposit" | "withdrawal"
 const Transaction: React.FC<TransactionProps> = ({ accountId, onTransactionComplete }) => {
   const [showTransactionForm, setShowTransactionForm] = useState(false)
   const [transactionType, setTransactionType] = useState<TransactionType>("deposit")
-  const [amount, setAmount] = useState("")
+  const [amount, setAmount] = useState<string>("")
+  const [rawAmount, setRawAmount] = useState<number>(0)
   const [transactionCity, setTransactionCity] = useState("")
   const [isButtonDisabled, setIsButtonDisabled] = useState(true)
   const [error, setError] = useState("")
 
   useEffect(() => {
-    setIsButtonDisabled(!(amount && transactionCity))
-  }, [amount, transactionCity])
+    setIsButtonDisabled(!(rawAmount > 0 && transactionCity))
+  }, [rawAmount, transactionCity])
 
   const handleTransaction = (type: TransactionType) => {
     setTransactionType(type)
@@ -28,8 +30,16 @@ const Transaction: React.FC<TransactionProps> = ({ accountId, onTransactionCompl
   const handleBack = () => {
     setShowTransactionForm(false)
     setAmount("")
+    setRawAmount(0)
     setTransactionCity("")
     setError("")
+  }
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^\d]/g, "")
+    const numericValue = parseFloat(value) || 0
+    setRawAmount(numericValue)
+    setAmount(formatCurrency(numericValue))
   }
 
   const submitTransaction = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -43,7 +53,7 @@ const Transaction: React.FC<TransactionProps> = ({ accountId, onTransactionCompl
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
-          amount: parseFloat(amount),
+          amount: rawAmount,
           type: transactionType,
           transactionCity,
         }),
@@ -53,6 +63,7 @@ const Transaction: React.FC<TransactionProps> = ({ accountId, onTransactionCompl
         console.log(`${transactionType} successful`)
         setShowTransactionForm(false)
         setAmount("")
+        setRawAmount(0)
         setTransactionCity("")
         onTransactionComplete()
       } else {
@@ -94,9 +105,9 @@ const Transaction: React.FC<TransactionProps> = ({ accountId, onTransactionCompl
             </label>
             <input
               id='amount'
-              type='number'
+              type='text'
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={handleAmountChange}
               className='mt-1 block w-full text-black px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
               required
             />
