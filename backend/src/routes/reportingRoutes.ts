@@ -4,6 +4,29 @@ import Customer from "../models/Customer"
 
 const router = express.Router()
 
+/**
+ * @swagger
+ * /api/reporting/clients-by-transactions:
+ *   get:
+ *     summary: Get clients by transactions in a specific month and year
+ *     tags: [Reporting]
+ *     parameters:
+ *       - in: query
+ *         name: month
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: year
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of clients with their transaction details
+ *       400:
+ *         description: Month and year are required
+ */
 router.get("/clients-by-transactions", async (req: express.Request, res: Response) => {
   try {
     const { month, year } = req.query
@@ -65,6 +88,29 @@ router.get("/clients-by-transactions", async (req: express.Request, res: Respons
   }
 })
 
+/**
+ * @swagger
+ * /api/reporting/clients-with-large-withdrawals:
+ *   get:
+ *     summary: Get clients with large withdrawals in a specific month and year
+ *     tags: [Reporting]
+ *     parameters:
+ *       - in: query
+ *         name: month
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: year
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of clients with large withdrawals
+ *       400:
+ *         description: Month and year are required
+ */
 router.get("/clients-with-large-withdrawals", async (req: express.Request, res: Response) => {
   try {
     const { month, year } = req.query

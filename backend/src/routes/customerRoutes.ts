@@ -4,6 +4,39 @@ import jwt from "jsonwebtoken"
 
 const router = express.Router()
 
+/**
+ * @swagger
+ * /api/customers:
+ *   post:
+ *     summary: Create a new customer
+ *     tags: [Customers]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - customerType
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               customerType:
+ *                 type: string
+ *                 enum: [persona_natural, empresa]
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created customer
+ *       400:
+ *         description: Error creating customer
+ */
 router.post("/", async (req, res) => {
   try {
     const { name, email, customerType, password } = req.body
@@ -23,6 +56,39 @@ router.post("/", async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/customers/login:
+ *   post:
+ *     summary: Customer login
+ *     tags: [Customers]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *       401:
+ *         description: Invalid email or password
+ */
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body
@@ -54,6 +120,18 @@ router.post("/login", async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/customers:
+ *   get:
+ *     summary: Get all customers
+ *     tags: [Customers]
+ *     responses:
+ *       200:
+ *         description: List of all customers
+ *       500:
+ *         description: Error fetching customers
+ */
 router.get("/", async (req, res) => {
   try {
     const customers = await Customer.find().select("-password")

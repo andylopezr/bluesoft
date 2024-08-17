@@ -7,159 +7,22 @@ import Customer from "../models/Customer"
 
 const router = express.Router()
 
-router.get("/clients-by-transactions", async (req: Request, res: Response) => {
-  try {
-    const { month, year } = req.query
-
-    if (!month || !year) {
-      return res.status(400).json({ message: "Month and year are required" })
-    }
-
-    const transactions = await Transaction.find({
-      createdAt: {
-        $gte: new Date(Number(year), Number(month) - 1, 1),
-        $lte: new Date(Number(year), Number(month), 0),
-      },
-    })
-
-    const clients = await Customer.aggregate([
-      {
-        $lookup: {
-          from: "accounts",
-          localField: "_id",
-          foreignField: "customerId",
-          as: "accounts",
-        },
-      },
-      {
-        $unwind: "$accounts",
-      },
-      {
-        $lookup: {
-          from: "transactions",
-          localField: "accounts._id",
-          foreignField: "accountId",
-          as: "transactions",
-        },
-      },
-      {
-        $unwind: "$transactions",
-      },
-      {
-        $match: {
-          "transactions.createdAt": {
-            $gte: new Date(Number(year), Number(month) - 1, 1),
-            $lte: new Date(Number(year), Number(month), 0),
-          },
-        },
-      },
-      {
-        $group: {
-          _id: "$_id",
-          name: { $first: "$name" },
-          email: { $first: "$email" },
-          accountNumber: { $first: "$accounts.accountNumber" },
-          totalTransactions: {
-            $sum: {
-              $cond: [{ $eq: ["$transactions.type", "deposit"] }, "$transactions.amount", 0],
-            },
-          },
-        },
-      },
-      { $sort: { totalTransactions: -1 } },
-    ])
-
-    res.json(clients)
-  } catch (error) {
-    handleError(res, error)
-  }
-})
-
-router.get("/clients-with-large-withdrawals", async (req: Request, res: Response) => {
-  try {
-    const { month, year } = req.query
-
-    if (!month || !year) {
-      return res.status(400).json({ message: "Month and year are required" })
-    }
-
-    const transactions = await Transaction.aggregate([
-      {
-        $match: {
-          type: "withdrawal",
-          createdAt: {
-            $gte: new Date(Number(year), Number(month) - 1, 1),
-            $lte: new Date(Number(year), Number(month), 0),
-          },
-        },
-      },
-      {
-        $group: {
-          _id: "$accountId",
-          totalAmount: { $sum: "$amount" },
-        },
-      },
-      {
-        $match: {
-          totalAmount: { $gt: 1000000 },
-        },
-      },
-      {
-        $lookup: {
-          from: "accounts",
-          localField: "_id",
-          foreignField: "_id",
-          as: "account",
-        },
-      },
-      {
-        $unwind: "$account",
-      },
-      {
-        $lookup: {
-          from: "customers",
-          localField: "account.customerId",
-          foreignField: "_id",
-          as: "customer",
-        },
-      },
-      {
-        $unwind: "$customer",
-      },
-      {
-        $lookup: {
-          from: "transactions",
-          localField: "account._id",
-          foreignField: "accountId",
-          as: "transactions",
-        },
-      },
-      {
-        $unwind: "$transactions",
-      },
-      {
-        $match: {
-          "transactions.transactionCity": { $ne: "$account.originCity" },
-        },
-      },
-      {
-        $group: {
-          _id: "$customer._id",
-          name: { $first: "$customer.name" },
-          email: { $first: "$customer.email" },
-          totalWithdrawals: { $sum: "$totalAmount" },
-        },
-      },
-    ])
-
-    res.json(transactions)
-  } catch (error) {
-    handleError(res, error)
-  }
-})
-
 router.use(authMiddleware)
 
+/**
+ * @swagger
+ * /api/accounts:
+ *   get:
+ *     summary: Get all accounts for the authenticated user
+ *     tags: [Accounts]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of accounts
+ *       401:
+ *         description: User not authenticated
+ */
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -173,6 +36,37 @@ router.get("/", async (req: AuthRequest, res: Response) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/accounts:
+ *   post:
+ *     summary: Create a new account
+ *     tags: [Accounts]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - accountType
+ *               - initialBalance
+ *               - originCity
+ *             properties:
+ *               accountType:
+ *                 type: string
+ *               initialBalance:
+ *                 type: number
+ *               originCity:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created account
+ *       401:
+ *         description: User not authenticated
+ */
 router.post("/", async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -187,6 +81,26 @@ router.post("/", async (req: AuthRequest, res: Response) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/accounts/{id}:
+ *   delete:
+ *     summary: Delete an account
+ *     tags: [Accounts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Account deleted
+ *       401:
+ *         description: User not authenticated
+ */
 router.delete("/:id", async (req: AuthRequest, res: Response) => {
   try {
     const accountId = req.params.id
@@ -197,6 +111,26 @@ router.delete("/:id", async (req: AuthRequest, res: Response) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/accounts/{id}/balance:
+ *   get:
+ *     summary: Get account balance
+ *     tags: [Accounts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Account balance
+ *       401:
+ *         description: User not authenticated
+ */
 router.get("/:id/balance", async (req: AuthRequest, res: Response) => {
   try {
     const balance = await accountService.getAccountBalance(req.params.id)
@@ -206,6 +140,44 @@ router.get("/:id/balance", async (req: AuthRequest, res: Response) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/accounts/{id}/transactions:
+ *   post:
+ *     summary: Create a new transaction
+ *     tags: [Accounts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - amount
+ *               - type
+ *               - transactionCity
+ *             properties:
+ *               amount:
+ *                 type: number
+ *               type:
+ *                 type: string
+ *                 enum: [deposit, withdrawal]
+ *               transactionCity:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created transaction
+ *       401:
+ *         description: User not authenticated
+ */
 router.post("/:id/transactions", async (req: AuthRequest, res: Response) => {
   try {
     const { amount, type, transactionCity } = req.body
@@ -217,6 +189,26 @@ router.post("/:id/transactions", async (req: AuthRequest, res: Response) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/accounts/{id}/transactions:
+ *   get:
+ *     summary: Get transactions for an account
+ *     tags: [Accounts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of transactions
+ *       401:
+ *         description: User not authenticated
+ */
 router.get("/:id/transactions", async (req: AuthRequest, res: Response) => {
   try {
     const transactions = await accountService.getTransactionsByAccount(req.params.id)
@@ -226,6 +218,38 @@ router.get("/:id/transactions", async (req: AuthRequest, res: Response) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/accounts/{id}/statement:
+ *   get:
+ *     summary: Generate monthly statement
+ *     tags: [Accounts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: month
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: year
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Monthly statement
+ *       400:
+ *         description: Month and year are required
+ *       401:
+ *         description: User not authenticated
+ */
 router.get("/:id/statement", async (req: AuthRequest, res: Response) => {
   try {
     const { month, year } = req.query
@@ -243,6 +267,26 @@ router.get("/:id/statement", async (req: AuthRequest, res: Response) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/accounts/{id}/transactions/all:
+ *   get:
+ *     summary: Get all transactions for an account
+ *     tags: [Accounts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of all transactions
+ *       401:
+ *         description: User not authenticated
+ */
 router.get("/:id/transactions/all", async (req: AuthRequest, res: Response) => {
   try {
     const accountId = req.params.id

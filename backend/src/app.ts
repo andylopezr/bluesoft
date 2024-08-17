@@ -7,10 +7,14 @@ import accountRoutes from "./routes/accountRoutes"
 import transactionRoutes from "./routes/transactionRoutes"
 import reportingRoutes from "./routes/reportingRoutes"
 import { authMiddleware } from "./middleware/authMiddleware"
+import swaggerUi from "swagger-ui-express"
+import swaggerSpec from "./swaggerOptions"
 
 dotenv.config()
 
 const app = express()
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 app.use(
   cors({

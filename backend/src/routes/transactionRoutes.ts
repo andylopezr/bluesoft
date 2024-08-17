@@ -12,6 +12,39 @@ interface TransactionRequest extends Request {
   }
 }
 
+/**
+ * @swagger
+ * /api/transactions:
+ *   post:
+ *     summary: Create a new transaction
+ *     tags: [Transactions]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - accountId
+ *               - amount
+ *               - type
+ *               - transactionCity
+ *             properties:
+ *               accountId:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               type:
+ *                 type: string
+ *                 enum: [deposit, withdrawal]
+ *               transactionCity:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created transaction
+ *       400:
+ *         description: Invalid input or missing required fields
+ */
 router.post("/", async (req: TransactionRequest, res: Response) => {
   try {
     const { accountId, amount, type, transactionCity } = req.body
