@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types } from "mongoose"
+import mongoose, { Schema, Document, Model } from "mongoose"
 import bcrypt from "bcrypt"
 
 export interface ICustomer extends Document {
@@ -6,10 +6,14 @@ export interface ICustomer extends Document {
   email: string
   customerType: "persona_natural" | "empresa"
   password: string
-  accounts: Types.ObjectId[]
+  accounts: mongoose.Types.ObjectId[]
   comparePassword(candidatePassword: string): Promise<boolean>
   createdAt: Date
   updatedAt: Date
+}
+
+interface ICustomerModel extends Model<ICustomer> {
+  findByEmail(email: string): Promise<ICustomer | null>
 }
 
 const CustomerSchema: Schema = new Schema(
@@ -53,4 +57,6 @@ CustomerSchema.statics.findByEmail = function (email: string) {
   return this.findOne({ email })
 }
 
-export default mongoose.model<ICustomer>("Customer", CustomerSchema)
+const Customer = mongoose.model<ICustomer, ICustomerModel>("Customer", CustomerSchema)
+
+export default Customer
