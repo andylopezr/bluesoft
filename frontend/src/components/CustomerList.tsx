@@ -9,7 +9,11 @@ interface Customer {
   customerType: string
 }
 
-const CustomerList: React.FC = () => {
+interface CustomerListProps {
+  refresh: number
+}
+
+const CustomerList: React.FC<CustomerListProps> = ({ refresh }) => {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -34,7 +38,7 @@ const CustomerList: React.FC = () => {
 
   useEffect(() => {
     fetchCustomers()
-  }, [])
+  }, [refresh])
 
   const handleRefresh = () => {
     fetchCustomers()

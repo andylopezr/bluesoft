@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react"
 
-const ReportGeneration = () => {
+interface ReportGenerationProps {
+  accountId: string
+}
+
+const ReportGeneration: React.FC<ReportGenerationProps> = ({ accountId }) => {
   const [selectedYear, setSelectedYear] = useState("")
   const [selectedMonth, setSelectedMonth] = useState("")
   const [isButtonDisabled, setIsButtonDisabled] = useState(true)
@@ -32,7 +36,7 @@ const ReportGeneration = () => {
   const handleGenerateReport = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/accounts/:id/statement?month=${selectedMonth}&year=${selectedYear}`,
+        `http://localhost:5000/api/accounts/${accountId}/statement?month=${selectedMonth}&year=${selectedYear}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -94,7 +98,7 @@ const ReportGeneration = () => {
               <option
                 key={month.value}
                 value={month.value}
-                disabled={parseInt(selectedYear) === currentYear && parseInt(month.value) >= currentMonth}
+                disabled={parseInt(selectedYear) === currentYear && parseInt(month.value) > currentMonth}
               >
                 {month.label}
               </option>

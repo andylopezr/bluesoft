@@ -1,7 +1,16 @@
+"use client"
+
 import Image from "next/image"
 import Layout from "../components/Layout"
+import { useEffect } from "react"
 
 export default function Home() {
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token")
+    }
+  }, [])
+
   return (
     <Layout>
       <div>

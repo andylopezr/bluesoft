@@ -1,7 +1,5 @@
 import Transaction, { ITransaction } from "../models/Transaction"
 import Account from "../models/Account"
-import mongoose from "mongoose"
-import { sendMessage } from "../kafka/producer"
 
 export const createTransaction = async (
   accountId: string,
@@ -9,11 +7,8 @@ export const createTransaction = async (
   type: "deposit" | "withdrawal",
   transactionCity: string
 ): Promise<ITransaction> => {
-  const session = await mongoose.startSession()
-  session.startTransaction()
-
   try {
-    const account = await Account.findById(accountId).session(session)
+    const account = await Account.findById(accountId)
     if (!account) {
       throw new Error("Account not found")
     }
@@ -24,7 +19,8 @@ export const createTransaction = async (
 
     const newBalance = type === "deposit" ? account.balance + amount : account.balance - amount
 
-    await Account.findByIdAndUpdate(accountId, { balance: newBalance }, { session })
+    account.balance = newBalance
+    await account.save()
 
     const transaction = new Transaction({
       accountId,
@@ -33,24 +29,12 @@ export const createTransaction = async (
       transactionCity,
     })
 
-    await transaction.save({ session })
+    const savedTransaction = await transaction.save()
 
-    await session.commitTransaction()
-
-    await sendMessage("transactions", {
-      accountId,
-      amount,
-      type,
-      transactionCity,
-      timestamp: new Date(),
-    })
-
-    return transaction
+    return savedTransaction
   } catch (error) {
-    await session.abortTransaction()
+    console.error("Error in createTransaction:", error)
     throw error
-  } finally {
-    session.endSession()
   }
 }
 

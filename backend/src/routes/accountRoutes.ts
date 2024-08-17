@@ -2,6 +2,7 @@ import express, { Request, Response } from "express"
 import { Types } from "mongoose"
 import * as accountService from "../services/accountService"
 import { AuthRequest } from "../middleware/authMiddleware"
+import { createTransaction } from "../services/transactionService"
 
 const router = express.Router()
 
@@ -45,7 +46,7 @@ router.post("/:id/transactions", async (req: AuthRequest, res: Response) => {
   try {
     const { amount, type, transactionCity } = req.body
     const accountId = req.params.id
-    const transaction = await accountService.createTransaction(accountId, amount, type, transactionCity)
+    const transaction = await createTransaction(accountId, amount, type, transactionCity)
     res.status(201).json(transaction)
   } catch (error) {
     handleError(res, error)

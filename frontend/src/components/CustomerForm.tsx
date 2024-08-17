@@ -1,14 +1,20 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+import AccountCreationModal from "./AccountCreationModal"
 
-const CustomerForm: React.FC = () => {
+interface CustomerFormProps {
+  onCustomerCreated: () => void
+}
+
+const CustomerForm: React.FC<CustomerFormProps> = ({ onCustomerCreated }) => {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [customerType, setCustomerType] = useState("persona_natural")
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState(false)
   const [isButtonDisabled, setIsButtonDisabled] = useState(true)
   const [isEmailValid, setIsEmailValid] = useState(true)
   const [isPasswordValid, setIsPasswordValid] = useState(true)
@@ -31,6 +37,7 @@ const CustomerForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setSuccess(false)
 
     if (!isEmailValid || !passwordsMatch) {
       setError("Please fix the errors before submitting")
@@ -50,8 +57,8 @@ const CustomerForm: React.FC = () => {
         throw new Error("Failed to create customer")
       }
 
-      const data = await response.json()
-      console.log("Customer created:", data)
+      setSuccess(true)
+      onCustomerCreated()
       setName("")
       setEmail("")
       setPassword("")
@@ -65,6 +72,14 @@ const CustomerForm: React.FC = () => {
 
   return (
     <div className='min-h-fit flex flex-col justify-start py-12 sm:px-6 lg:px-8'>
+      <AccountCreationModal
+        show={error !== "" || success}
+        message={error || "Customer created successfully!"}
+        onClose={() => {
+          setError("")
+          setSuccess(false)
+        }}
+      />
       <div className='sm:mx-auto sm:w-full sm:max-w-md'>
         <h2 className='text-center text-3xl font-extrabold text-white'>Create a Customer Account</h2>
       </div>
