@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import Layout from "@/components/Layout"
+import { formatCurrency } from "@/utils/formatCurrency"
 
 const Reports: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState("")
@@ -125,32 +126,75 @@ const Reports: React.FC = () => {
           <div className='space-y-6'>
             <div className='bg-white py-6 px-4 shadow sm:rounded-lg sm:px-6 text-black'>
               <h2 className='text-xl font-bold mb-4'>Clients by Transaction Volume</h2>
-              <ul className='space-y-4'>
-                {clientsByTransactions.map((client: any) => (
-                  <li
-                    key={client._id}
-                    className='flex justify-between items-center border-b border-gray-200 py-2'
-                  >
-                    <span className='text-gray-800'>{client.name}</span>
-                    <span className='text-gray-600'>{client.accountNumber}</span>
-                    <span className='text-gray-900 font-semibold'>${client.totalTransactions}</span>
-                  </li>
-                ))}
-              </ul>
+              {clientsByTransactions.length > 0 ? (
+                <table className='min-w-full divide-y divide-gray-200'>
+                  <thead className='bg-gray-50'>
+                    <tr>
+                      <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                        Email
+                      </th>
+                      <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                        Name
+                      </th>
+                      <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                        Account No.
+                      </th>
+                      <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                        Amount
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className='bg-white divide-y divide-gray-200'>
+                    {clientsByTransactions.map((client: any) => (
+                      <tr key={client._id}>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>{client.email}</td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>{client.name}</td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+                          {client.accountNumber}
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+                          {formatCurrency(client.totalTransactions)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className='text-gray-600'>No results for the current criteria...</p>
+              )}
             </div>
             <div className='bg-white py-6 px-4 shadow sm:rounded-lg sm:px-6 text-black'>
               <h2 className='text-xl font-bold mb-4'>Clients with Large Withdrawals</h2>
-              <ul className='space-y-4'>
-                {clientsWithLargeWithdrawals.map((client: any) => (
-                  <li
-                    key={client._id}
-                    className='flex justify-between items-center border-b border-gray-200 py-2'
-                  >
-                    <span className='text-gray-800'>{client.name}</span>
-                    <span className='text-gray-900 font-semibold'>${client.totalWithdrawals}</span>
-                  </li>
-                ))}
-              </ul>
+              {clientsWithLargeWithdrawals.length > 0 ? (
+                <table className='min-w-full divide-y divide-gray-200'>
+                  <thead className='bg-gray-50'>
+                    <tr>
+                      <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                        Email
+                      </th>
+                      <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                        Name
+                      </th>
+                      <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                        Amount
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className='bg-white divide-y divide-gray-200'>
+                    {clientsWithLargeWithdrawals.map((client: any) => (
+                      <tr key={client._id}>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>{client.email}</td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>{client.name}</td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+                          {formatCurrency(client.totalWithdrawals)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className='text-gray-600'>No results for the current criteria...</p>
+              )}
             </div>
           </div>
         </div>
