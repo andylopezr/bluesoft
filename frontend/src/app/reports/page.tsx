@@ -164,7 +164,7 @@ const Reports: React.FC = () => {
               )}
             </div>
             <div className='bg-white py-6 px-4 shadow sm:rounded-lg sm:px-6 text-black'>
-              <h2 className='text-xl font-bold mb-4'>Clients with Large Withdrawals</h2>
+              <h2 className='text-xl font-bold mb-4'>Clients with Roaming Large Withdrawals</h2>
               {clientsWithLargeWithdrawals.length > 0 ? (
                 <table className='min-w-full divide-y divide-gray-200'>
                   <thead className='bg-gray-50'>

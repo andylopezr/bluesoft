@@ -202,7 +202,7 @@ bluesoft-bank/
 
 ## API Documentation
 
-API documentation is available via Swagger UI at `http://localhost:3000/api-docs` when running the development server.
+API documentation is available via Swagger UI at `http://localhost:5000/api-docs/` when running the development server.
 
 ## Testing
 
